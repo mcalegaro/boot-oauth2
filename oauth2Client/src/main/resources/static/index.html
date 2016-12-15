@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>OAuth2</title>
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width" />
+<base href="/" />
+<link rel="stylesheet" type="text/css"
+	href="/webjars/bootstrap/css/bootstrap.min.css" />
+<script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
+<script type="text/javascript"
+	src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/webjars/angularjs/angular.min.js"></script>
+<script type="text/javascript">
+	angular.module("app", []).controller("home", function($http, $location) {
+		var self = this;
+		$http.get("/user").success(function(data) {
+			if (data.userAuthentication != undefined) {
+				self.user = data.userAuthentication.details.name;
+				if (self.user == undefined) {
+					self.user = data.userAuthentication.details.login;
+				}
+				self.authenticated = true;
+			}
+		}).error(function() {
+			self.user = "N/A";
+			self.authenticated = false;
+		});
+		self.logout = function() {
+			if ($location.absUrl().indexOf("error=true") >= 0) {
+				self.authenticated = false;
+				self.error = true;
+			}
+			$http.post('/logout', {}).success(function() {
+				self.authenticated = false;
+				$location.path("/");
+			}).error(function(data) {
+				console.log("Logout failed")
+				self.authenticated = false;
+			});
+		};
+	});
+</script>
+</head>
+<body ng-app="app" ng-controller="home as home" class="ng-cloak"
+	ng-cloak>
+	<h5>OAuth2</h5>
+	<div class="container" ng-show="!home.authenticated">
+		<div class="container text-danger" ng-show="home.error">There
+			was an error (bad credentials).</div>
+		<div>
+			With Facebook: <a href="/login/facebook">click here</a>
+		</div>
+		<div>
+			With Github: <a href="/login/github">click here</a>
+		</div>
+		<div>
+			With Acme: <a href="/login/acme">click here</a>
+		</div>
+	</div>
+	<div class="container" ng-show="home.authenticated">
+		Logged in as: <span ng-bind="home.user"></span>
+		<div>
+			<button ng-click="home.logout()" class="btn btn-primary">Logout</button>
+		</div>
+	</div>
+</body>
+</html>
